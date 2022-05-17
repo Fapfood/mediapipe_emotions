@@ -58,7 +58,18 @@ def process_base_face_mesh(drawing_spec,
     return landmark_base_ocv, base_input_image
 
 
-def process(landmark_base_ocv, landmark_target_ocv, base_input_image, target_input_image):
+def process_target_face_mesh(face_mesh,
+                             webcam_img):
+    image_rows, image_cols, _ = webcam_img.shape
+    webcam_img.flags.writeable = False
+    results = face_mesh.process(webcam_img)
+    landmark_target_ocv = transform_landmarks_from_tf_to_ocv(results, image_cols, image_rows)
+    webcam_img.flags.writeable = True
+    target_input_image = webcam_img.copy()
+    return landmark_target_ocv, target_input_image, results.multi_face_landmarks
+
+
+def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_input_image):
     seam_clone = target_input_image.copy()
     img2_gray = cv2.cvtColor(target_input_image, cv2.COLOR_BGR2GRAY)
     img2_new_face = np.zeros_like(target_input_image)
@@ -140,6 +151,7 @@ def main():
     # For webcam input:
     face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
     drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
+
     landmark_base_ocv, base_input_image = process_base_face_mesh(drawing_spec, face_mesh, change_face,
                                                                  show_landmarks=key_draw_landmarks,
                                                                  show_triangulated_mesh=key_draw_landmarks)
@@ -154,35 +166,29 @@ def main():
                                                                          show_landmarks=key_draw_landmarks,
                                                                          show_triangulated_mesh=key_draw_landmarks)
             flag_change_face = False
-        image_rows, image_cols, _ = webcam_img.shape
-        webcam_img.flags.writeable = False
-        results = face_mesh.process(webcam_img)
-        landmark_target_ocv = transform_landmarks_from_tf_to_ocv(results, image_cols, image_rows)
-        webcam_img.flags.writeable = True
 
-        target_input_image = webcam_img.copy()
+        landmark_target_ocv, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
         out_image = webcam_img.copy()
 
-        if results.multi_face_landmarks:
-            for face_landmarks in results.multi_face_landmarks:
-                mp_drawing.draw_landmarks(
-                    image=out_image,
-                    landmark_list=face_landmarks,
-                    connections=mp_face_mesh.FACEMESH_TESSELATION,
-                    landmark_drawing_spec=drawing_spec,
-                    connection_drawing_spec=drawing_spec)
-                # out_image = draw_triangulated_mesh(landmark_target_ocv, webcam_img)
+        for face_landmarks in multi_face_landmarks:
+            mp_drawing.draw_landmarks(
+                image=out_image,
+                landmark_list=face_landmarks,
+                connections=mp_face_mesh.FACEMESH_TESSELATION,
+                landmark_drawing_spec=drawing_spec,
+                connection_drawing_spec=drawing_spec)
+            out_image = draw_triangulated_mesh(landmark_target_ocv, out_image)
 
-                if len(landmark_target_ocv) > 0:
-                    print(len(landmark_target_ocv[0]))
-                    for i, elem in enumerate(landmark_target_ocv):
-                        if len(elem) != 2:
-                            print(i)
+            if len(landmark_target_ocv) > 0:
+                print(len(landmark_target_ocv[0]))
+                for i, elem in enumerate(landmark_target_ocv):
+                    if len(elem) != 2:
+                        print(i)
 
-                    seam_clone, seamless_clone = process(landmark_base_ocv, landmark_target_ocv,
-                                                         base_input_image, target_input_image)
+                seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
+                                                        base_input_image, target_input_image)
 
-        cv2.imshow('MediaPipe FaceMesh', out_image)
+        cv2.imshow('input', out_image)
         cv2.imshow('seam', seam_clone)
         cv2.imshow('seamless', seamless_clone)
         key = cv2.waitKey(5)
