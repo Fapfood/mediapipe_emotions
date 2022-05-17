@@ -170,23 +170,24 @@ def main():
         landmark_target_ocv, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
         out_image = webcam_img.copy()
 
-        for face_landmarks in multi_face_landmarks:
-            mp_drawing.draw_landmarks(
-                image=out_image,
-                landmark_list=face_landmarks,
-                connections=mp_face_mesh.FACEMESH_TESSELATION,
-                landmark_drawing_spec=drawing_spec,
-                connection_drawing_spec=drawing_spec)
-            out_image = draw_triangulated_mesh(landmark_target_ocv, out_image)
+        if multi_face_landmarks is not None:
+            for face_landmarks in multi_face_landmarks:
+                mp_drawing.draw_landmarks(
+                    image=out_image,
+                    landmark_list=face_landmarks,
+                    connections=mp_face_mesh.FACEMESH_TESSELATION,
+                    landmark_drawing_spec=drawing_spec,
+                    connection_drawing_spec=drawing_spec)
+                out_image = draw_triangulated_mesh(landmark_target_ocv, out_image)
 
-            if len(landmark_target_ocv) > 0:
-                print(len(landmark_target_ocv[0]))
-                for i, elem in enumerate(landmark_target_ocv):
-                    if len(elem) != 2:
-                        print(i)
+                if len(landmark_target_ocv) > 0:
+                    print(len(landmark_target_ocv[0]))
+                    for i, elem in enumerate(landmark_target_ocv):
+                        if len(elem) != 2:
+                            print(i)
 
-                seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
-                                                        base_input_image, target_input_image)
+                    seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
+                                                            base_input_image, target_input_image)
 
         cv2.imshow('input', out_image)
         cv2.imshow('seam', seam_clone)
