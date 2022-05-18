@@ -7,7 +7,7 @@ from config import PATH, EMOTIONS
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
-
+mp_selfie_segmentation = mp.solutions.selfie_segmentation
 
 def create_config(face_mesh, drawing_spec, name):
     result = {}
@@ -165,48 +165,96 @@ def main():
 
     config = create_config(face_mesh, drawing_spec, 'Boy')
 
+    # For webcam input:
+    BG_COLOR = (0, 255, 196)  # green screen
     cap = cv2.VideoCapture(0)
-    while cap.isOpened():
-        success, webcam_img = cap.read()
-        if not success:
-            continue
-        landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
-        out_image = webcam_img.copy()
-        clone = target_input_image
 
-        if multi_face_landmarks is not None:
-            for index, face_landmarks in enumerate(multi_face_landmarks):
-                mp_drawing.draw_landmarks(
-                    image=out_image,
-                    landmark_list=face_landmarks,
-                    connections=mp_face_mesh.FACEMESH_TESSELATION,
-                    landmark_drawing_spec=drawing_spec,
-                    connection_drawing_spec=drawing_spec)
-                emotion = classify(face_landmarks.landmark)
-                print(index, emotion)
+    with mp_selfie_segmentation.SelfieSegmentation(model_selection=0) as selfie_segmentation:
+        bg_image = None
 
-                if len(landmark_target_ocvs[index]) > 0:
-                    for i, elem in enumerate(landmark_target_ocvs[index]):
-                        if elem is None:
-                            emotion = 'unknown'
-                            break
-                        if len(elem) != 2:
-                            print(i)
+        while cap.isOpened():
+            success, webcam_img = cap.read()
+            if not success:
+                continue
+            landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
+            out_image = webcam_img.copy()
+            clone = target_input_image
 
-                    if emotion != 'unknown':
-                        landmark_base_ocv, base_input_image = config[emotion]
-                        seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocvs[index],
-                                                                base_input_image, clone)
-                        if seamless:
-                            clone = seamless_clone
-                        else:
-                            clone = seam_clone
+            webcam_img = cv2.cvtColor(webcam_img, cv2.COLOR_BGR2RGB)
+            webcam_img.flags.writeable = False
+            results = selfie_segmentation.process(webcam_img)
 
-        cv2.imshow('input', out_image)
-        cv2.imshow('output', clone)
-        key = cv2.waitKey(5)
-        if key == 27:
-            break
+            webcam_img.flags.writeable = True
+            webcam_img = cv2.cvtColor(webcam_img, cv2.COLOR_RGB2BGR)
+            # Draw selfie segmentation on the background image.
+            # To improve segmentation around boundaries, consider applying a joint
+            # bilateral filter to "results.segmentation_mask" with "image".
+            condition = np.stack(
+                (results.segmentation_mask,) * 3, axis=-1) > 0.1
+
+
+
+
+
+            if multi_face_landmarks is not None:
+                for index, face_landmarks in enumerate(multi_face_landmarks):
+                    mp_drawing.draw_landmarks(
+                        image=out_image,
+                        landmark_list=face_landmarks,
+                        connections=mp_face_mesh.FACEMESH_TESSELATION,
+                        landmark_drawing_spec=drawing_spec,
+                        connection_drawing_spec=drawing_spec)
+                    emotion = classify(face_landmarks.landmark)
+                    print(index, emotion)
+
+
+                    #zamiana tła na obrazek/blur w zależności od emocji
+                    if emotion == 'anger':
+                        bg_image = cv2.imread('backgrounds/angry.jpg')
+                    if emotion == 'disgust':
+                        bg_image = cv2.imread('backgrounds/disgust.jpg')
+                    if emotion == 'fear':
+                        bg_image = cv2.imread('backgrounds/neutral.jpg')
+                    if emotion == 'surprise':
+                        bg_image = cv2.imread('backgrounds/surprised.jpg')
+                    if emotion == 'sadness':
+                        bg_image = cv2.imread('backgrounds/sad.jpg')
+                    if emotion == 'happiness':
+                        bg_image = cv2.imread('backgrounds/happy.jpg')
+                    if emotion == 'unknown':
+                        bg_image = cv2.GaussianBlur(webcam_img, (55, 55), 0)
+
+                    if bg_image is None:
+                        bg_image = np.zeros(webcam_img.shape, dtype=np.uint8)
+                        bg_image[:] = BG_COLOR
+
+                    if len(landmark_target_ocvs[index]) > 0:
+                        for i, elem in enumerate(landmark_target_ocvs[index]):
+                            if elem is None:
+                                emotion = 'unknown'
+                                break
+                            if len(elem) != 2:
+                                print(i)
+
+                        if emotion != 'unknown':
+                            landmark_base_ocv, base_input_image = config[emotion]
+                            seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocvs[index],
+                                                                    base_input_image, clone)
+                            if seamless:
+                                clone = seamless_clone
+                            else:
+                                clone = seam_clone
+
+
+            #potakujemy obraz z maską, clone - to użytkownik, bg_image - tło
+            output_image = np.where(condition, clone, bg_image)
+
+            cv2.imshow('Virtual Background', output_image)
+            cv2.imshow('input', out_image)
+            cv2.imshow('output', clone)
+            key = cv2.waitKey(5)
+            if key == 27:
+                break
 
     face_mesh.close()
     cap.release()
