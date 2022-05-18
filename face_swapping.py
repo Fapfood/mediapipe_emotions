@@ -3,11 +3,21 @@ import mediapipe as mp
 import triangulation_media_pipe as tmp
 import numpy as np
 from emotion_classifier import classify
+from config import PATH, EMOTIONS
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
 
-change_face = 'jim_carrey.jpg'
+
+def create_config(face_mesh, drawing_spec, name):
+    result = {}
+    for emotion, number in EMOTIONS.items():
+        path = PATH.format(name=name, number=number)
+        landmark_base_ocv, base_input_image = process_base_face_mesh(drawing_spec, face_mesh, path,
+                                                                     show_landmarks=True,
+                                                                     show_triangulated_mesh=True)
+        result.update({emotion: (landmark_base_ocv, base_input_image)})
+    return result
 
 
 def load_base_img(face_mesh, image_file_name):
@@ -146,28 +156,17 @@ def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_
 
 
 def main():
-    key_draw_landmarks = True
-    flag_change_face = False
-
     # For webcam input:
-    face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_faces=3)
     drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
-    landmark_base_ocv, base_input_image = process_base_face_mesh(drawing_spec, face_mesh, change_face,
-                                                                 show_landmarks=key_draw_landmarks,
-                                                                 show_triangulated_mesh=key_draw_landmarks)
+    config = create_config(face_mesh, drawing_spec, 'Boy')
 
     cap = cv2.VideoCapture(0)
     while cap.isOpened():
         success, webcam_img = cap.read()
         if not success:
             continue
-        if flag_change_face:
-            landmark_base_ocv, base_input_image = process_base_face_mesh(drawing_spec, face_mesh, change_face,
-                                                                         show_landmarks=key_draw_landmarks,
-                                                                         show_triangulated_mesh=key_draw_landmarks)
-            flag_change_face = False
-
         landmark_target_ocv, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
         out_image = webcam_img.copy()
 
@@ -189,8 +188,13 @@ def main():
                         if len(elem) != 2:
                             print(i)
 
-                    seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
-                                                            base_input_image, target_input_image)
+                    if emotion != 'unknown':
+                        landmark_base_ocv, base_input_image = config[emotion]
+                        seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
+                                                                base_input_image, target_input_image)
+                    else:
+                        seam_clone = out_image
+                        seamless_clone = out_image
 
         cv2.imshow('seam', seam_clone)
         cv2.imshow('seamless', seamless_clone)
