@@ -1,0 +1,236 @@
+<ScreenManagement>:
+
+    HomeScreen:
+        id: name
+        name: 'home'
+        canvas.before:
+            Color:
+                rgb: (1, 1, 1, 1)
+            Rectangle:
+                pos:self.pos
+                size:self.size
+
+    SettingsScreen:
+        id: settings
+        name: 'settings'
+
+    ViewScreen:
+        id: view
+        name: 'view'
+
+
+<HomeScreen>
+    FloatLayout:
+
+        canvas:
+            Color:
+                rgb: (0.94, 0.96, 0.98, 1)
+            Rectangle:
+                size: (720,950)
+
+        MDRaisedButton:
+	        text: "START"
+			font_size: 18
+            size_hint: 0.15, 0.05
+            pos_hint: {"x":0.09, "y":0.29}
+            on_release:
+                root.manager.current = 'settings'
+                root.manager.ids.settings.func_abc(self) # example how to use class inside kv and Py
+
+	    Label:
+	        size_hint: (0.33, 0.16)
+            text: 'Facial Emotion\nRecognition'
+            bold: True
+            color: 0.12,0.12,0.12,1
+            font_size: 64
+            pos_hint: {"x":0.07, "y":0.54}
+
+        Label:
+	        size_hint: (0.33, 0.07)
+            text: 'Easy and simple detection of human feelings\nat a specific moment.'
+            color: 0.38,0.38,0.38,1
+            font_size: 22
+            pos_hint: {"x":0.075, "y":0.46}
+
+        Image:
+            size_hint: (0.46, 0.7)
+            pos_hint: {"x":0.51, "y":0.15}
+		    source: 'images/hero.png'
+			allow_stretch: True
+			keep_ratio: True
+
+
+<SettingsScreen>
+    FloatLayout:
+
+        Button: # Top menu button!!!
+	        text: "Home"
+	        bold: True
+			font_size: 18
+            size_hint: 0.04, 0.03
+            pos_hint: {"x":0.94, "y":0.96}
+            background_color: 0, 0, 0, 0
+            color: 0.12,0.12,0.12,1
+            on_release:
+                root.manager.current = 'home'
+                root.manager.ids.settings.func_abc(self) # example how to use class inside kv and Py
+
+        Label:
+	        size_hint: (0.07, 0.03)
+            text: 'Select photo'
+            color: 0.38,0.38,0.38,1
+            font_size: 16
+            pos_hint: {"x":0.03, "y":0.87}
+
+        Label:
+	        size_hint: (0.07, 0.03)
+            text: 'Webcam View'
+            color: 0.38,0.38,0.38,1
+            font_size: 16
+            pos_hint: {"x":0.44, "y":0.87}
+
+        MDRaisedButton:
+	        text: "Go to View Mode"
+			font_size: 16
+            size_hint: 0.13, 0.05
+            pos_hint: {"x":0.85, "y":0.045}
+            on_release:
+                root.manager.current = 'view'
+                root.manager.ids.settings.func_abc(self) # example how to use class inside kv and Py
+
+        # Image top left
+        MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.028, "y":0.6}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/girl5.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        # Image top right
+        MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.18, "y":0.6}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/Boy5.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        # Image Middle left
+        MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.028, "y":0.32}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/men6.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        # Image Middle right
+        MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.18, "y":0.32}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/OldMen9.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        # Image bottom left
+        MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.028, "y":0.047}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/womanl5.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        # Image Bottom left
+		MDFlatButton:
+            size_hint: (0.14, 0.24)
+            pos_hint: {"x":0.18, "y":0.047}
+            md_bg_color: 0, 0, 0, 0
+            Image:
+                #size_hint: (0.14, 0.24)
+                pos_hint: {"x":0.028, "y":0.6}
+		        source: 'images/Grandma8.jpg'
+			    allow_stretch: False
+			    keep_ratio: False
+
+        Camera:
+            id: camera
+            allow_stretch: True
+			keep_ratio: False
+            size_hint: (0.54, 0.62)
+            resolution: (640, 480)
+            play: True
+            pos_hint: {"x":0.44, "y":0.22}
+
+        MDIconButton:
+            icon: "volume-high"
+            user_font_size: "30sp"
+            pos_hint: {"x": 0.43, "y": 0.16}
+            theme_text_color: 'Secondary'
+
+        MDIconButton:
+            icon: "calendar-text"
+            user_font_size: "30sp"
+            theme_text_color: 'Secondary'
+            pos_hint: {"x": 0.47, "y": 0.16}
+
+        MDIconButton:
+            icon: "image"
+            user_font_size: "30sp"
+            theme_text_color: 'Secondary'
+            pos_hint: {"x": 0.51, "y": 0.16}
+
+        MDIconButton:
+            icon: "face-recognition"
+            user_font_size: "30sp"
+            theme_text_color: 'Secondary'
+            pos_hint: {"x": 0.55, "y": 0.16}
+
+
+<ViewScreen>
+    FloatLayout:
+
+        #Top Menu
+        Button:
+	        text: "Home"
+	        bold: True
+			font_size: 18
+            size_hint: 0.04, 0.03
+            pos_hint: {"x":0.94, "y":0.96}
+            background_color: 0, 0, 0, 0
+            color: 0.12,0.12,0.12,1
+            on_release:
+                root.manager.current = 'home'
+                root.manager.ids.settings.func_abc(self) # example how to use class inside kv and Py
+
+        Label:
+	        size_hint: (0.07, 0.03)
+            text: 'Webcam'
+            color: 0.38,0.38,0.38,1
+            font_size: 16
+            pos_hint: {"x":0.03, "y":0.87}
+
+        MDRaisedButton:
+	        text: "Go back"
+			    font_size: 16
+          size_hint: 0.13, 0.05
+          pos_hint: {"x":0.85, "y":0.045}
+          on_release:
+            root.manager.current = 'settings'
