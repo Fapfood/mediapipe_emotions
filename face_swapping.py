@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import triangulation_media_pipe as tmp
 import numpy as np
+from emotion_classifier import classify
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
@@ -179,6 +180,8 @@ def main():
                     landmark_drawing_spec=drawing_spec,
                     connection_drawing_spec=drawing_spec)
                 out_image = draw_triangulated_mesh(landmark_target_ocv, out_image)
+                emotion = classify(face_landmarks.landmark)
+                print(emotion)
 
                 if len(landmark_target_ocv) > 0:
                     print(len(landmark_target_ocv[0]))
@@ -189,9 +192,9 @@ def main():
                     seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
                                                             base_input_image, target_input_image)
 
-        cv2.imshow('input', out_image)
         cv2.imshow('seam', seam_clone)
         cv2.imshow('seamless', seamless_clone)
+        cv2.imshow('input', out_image)
         key = cv2.waitKey(5)
         if key == 27:
             break
