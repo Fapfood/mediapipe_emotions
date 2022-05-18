@@ -27,14 +27,15 @@ def load_base_img(face_mesh, image_file_name):
 
 
 def transform_landmarks_from_tf_to_ocv(keypoints, face_width, face_height):
-    landmark_list = []
+    multi_landmark_list = []
     if keypoints.multi_face_landmarks is not None:
         for face_landmarks in keypoints.multi_face_landmarks:
+            landmark_list = []
             for lm in face_landmarks.landmark:
-                # print(l.x, l.y, l.z)
                 pt = mp_drawing._normalized_to_pixel_coordinates(lm.x, lm.y, face_width, face_height)
                 landmark_list.append(pt)
-    return landmark_list
+            multi_landmark_list.append(landmark_list)
+    return multi_landmark_list
 
 
 def draw_triangulated_mesh(ocv_keypoints, img):
@@ -56,7 +57,7 @@ def process_base_face_mesh(drawing_spec,
     base_face_handler = load_base_img(face_mesh, image_file)
     base_input_image = base_face_handler['img'].copy()
     image_rows, image_cols, _ = base_face_handler['img'].shape
-    landmark_base_ocv = transform_landmarks_from_tf_to_ocv(base_face_handler['landmarks'], image_cols, image_rows)
+    landmark_base_ocv = transform_landmarks_from_tf_to_ocv(base_face_handler['landmarks'], image_cols, image_rows)[0]
     if show_landmarks:
         mp_drawing.draw_landmarks(
             image=base_face_handler['img'],
@@ -156,6 +157,8 @@ def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_
 
 
 def main():
+    seamless = False  # True
+
     # For webcam input:
     face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_faces=3)
     drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
@@ -167,38 +170,40 @@ def main():
         success, webcam_img = cap.read()
         if not success:
             continue
-        landmark_target_ocv, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
+        landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
         out_image = webcam_img.copy()
+        clone = target_input_image
 
         if multi_face_landmarks is not None:
-            for face_landmarks in multi_face_landmarks:
+            for index, face_landmarks in enumerate(multi_face_landmarks):
                 mp_drawing.draw_landmarks(
                     image=out_image,
                     landmark_list=face_landmarks,
                     connections=mp_face_mesh.FACEMESH_TESSELATION,
                     landmark_drawing_spec=drawing_spec,
                     connection_drawing_spec=drawing_spec)
-                out_image = draw_triangulated_mesh(landmark_target_ocv, out_image)
                 emotion = classify(face_landmarks.landmark)
-                print(emotion)
+                print(index, emotion)
 
-                if len(landmark_target_ocv) > 0:
-                    print(len(landmark_target_ocv[0]))
-                    for i, elem in enumerate(landmark_target_ocv):
+                if len(landmark_target_ocvs[index]) > 0:
+                    for i, elem in enumerate(landmark_target_ocvs[index]):
+                        if elem is None:
+                            emotion = 'unknown'
+                            break
                         if len(elem) != 2:
                             print(i)
 
                     if emotion != 'unknown':
                         landmark_base_ocv, base_input_image = config[emotion]
-                        seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocv,
-                                                                base_input_image, target_input_image)
-                    else:
-                        seam_clone = out_image
-                        seamless_clone = out_image
+                        seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocvs[index],
+                                                                base_input_image, clone)
+                        if seamless:
+                            clone = seamless_clone
+                        else:
+                            clone = seam_clone
 
-        cv2.imshow('seam', seam_clone)
-        cv2.imshow('seamless', seamless_clone)
         cv2.imshow('input', out_image)
+        cv2.imshow('output', clone)
         key = cv2.waitKey(5)
         if key == 27:
             break
