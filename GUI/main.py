@@ -30,11 +30,62 @@ def show_frames():
 
 
 
+def seam():
+   print( "Hello Python", "Hello World")
+
+Button1 = tk.Button(win, text ="SEAM", command = seam(), height= 2, width=20, bg='white')
+Button1.place(x=746, y=750)
+
+
+def seamless():
+   print( "Hello Python", "Hello World")
+
+Button2 = tk.Button(win, text ="SEAMLESS", command = seamless(), height= 2, width=20, bg='white')
+Button2.place(x=939, y=750)
+
 def none():
    print( "Hello Python", "Hello World")
 
-Button1 = tk.Button(win, text ="Hello", command = none(), height= 2, width=20)
-Button1.place(x=746, y=750)
+Button3 = tk.Button(win, text ="NONE", command = none(), height= 2, width=20, bg='white')
+Button3.place(x=1132, y=750)
+
+def user3_men():
+   print( "Hello Python", "Hello World")
+
+Button4 = tk.Button(win, text ="MEN", command = user3_men(), height= 2, width=20, bg='white')
+Button4.place(x=553, y=750)
+
+def user3_woman():
+   print( "Hello Python", "Hello World")
+
+Button5 = tk.Button(win, text ="WOMAN", command = user3_woman(), height= 2, width=20, bg='white')
+Button5.place(x=553, y=820)
+
+def user2_men():
+   print( "Hello Python", "Hello World")
+
+Button6 = tk.Button(win, text ="MEN", command = user2_men(), height= 2, width=20, bg='white')
+Button6.place(x=360, y=750)
+
+def user2_woman():
+   print( "Hello Python", "Hello World")
+
+Button6 = tk.Button(win, text ="WOMAN", command = user2_woman(), height= 2, width=20, bg='white')
+Button6.place(x=360, y=820)
+
+def user1_men():
+   print( "Hello Python", "Hello World")
+
+Button7 = tk.Button(win, text ="MEN", command = user1_men(), height= 2, width=20, bg='white')
+Button7.place(x=167, y=750)
+
+def user1_woman():
+   print( "Hello Python", "Hello World")
+
+Button8 = tk.Button(win, text ="WOMAN", command = user1_woman(), height= 2, width=20, bg='white')
+Button8.place(x=167, y=820)
+
+
 
 
 show_frames()
