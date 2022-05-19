@@ -3,11 +3,13 @@ import mediapipe as mp
 import triangulation_media_pipe as tmp
 import numpy as np
 from emotion_classifier import classify
-from config import PATH, EMOTIONS
+from config import EMOTIONS
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
 mp_selfie_segmentation = mp.solutions.selfie_segmentation
+PATH = 'GUI/images/{name}{number}.jpg'
+
 
 def create_config(face_mesh, drawing_spec, name):
     result = {}
@@ -157,7 +159,7 @@ def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_
 
 
 def main():
-    seamless = False  # True
+    seamless = True  # True
 
     # For webcam input:
     face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_faces=3)
@@ -176,7 +178,8 @@ def main():
             success, webcam_img = cap.read()
             if not success:
                 continue
-            landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
+            landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh,
+                                                                                                      webcam_img)
             out_image = webcam_img.copy()
             clone = target_input_image
 
@@ -192,10 +195,6 @@ def main():
             condition = np.stack(
                 (results.segmentation_mask,) * 3, axis=-1) > 0.1
 
-
-
-
-
             if multi_face_landmarks is not None:
                 for index, face_landmarks in enumerate(multi_face_landmarks):
                     mp_drawing.draw_landmarks(
@@ -207,8 +206,7 @@ def main():
                     emotion = classify(face_landmarks.landmark)
                     print(index, emotion)
 
-
-                    #zamiana tła na obrazek/blur w zależności od emocji
+                    # zamiana tła na obrazek/blur w zależności od emocji
                     if emotion == 'anger':
                         bg_image = cv2.imread('backgrounds/angry.jpg')
                     if emotion == 'disgust':
@@ -245,8 +243,7 @@ def main():
                             else:
                                 clone = seam_clone
 
-
-            #potakujemy obraz z maską, clone - to użytkownik, bg_image - tło
+            # potakujemy obraz z maską, clone - to użytkownik, bg_image - tło
             output_image = np.where(condition, clone, bg_image)
 
             cv2.imshow('Virtual Background', output_image)
