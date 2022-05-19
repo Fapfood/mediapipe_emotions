@@ -3,12 +3,11 @@ import mediapipe as mp
 import triangulation_media_pipe as tmp
 import numpy as np
 from emotion_classifier import classify
-from config import EMOTIONS
+from config import EMOTIONS, PATH
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
 mp_selfie_segmentation = mp.solutions.selfie_segmentation
-PATH = 'GUI/images/{name}{number}.jpg'
 
 
 def create_config(face_mesh, drawing_spec, name):
