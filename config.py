@@ -6,7 +6,7 @@
 # 11, 12 - fear
 
 
-PATH = 'GUI/images/{name}{number}.jpg'
+PATH = 'images/{name}{number}.jpg'
 EMOTIONS = {
     'anger': 1,
     'disgust': 3,
