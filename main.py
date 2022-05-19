@@ -19,14 +19,18 @@ label.place(x=100, y=150)
 cap = cv2.VideoCapture(0)
 
 
+# główna pętla programu uruchamiana co 20 milisekund
 def show_frames():
     success, webcam_img = cap.read()
 
+    # rozpoznanie obrazu z kamery i stworzenie siatki 2D
     landmark_target_ocvs, target_input_image, multi_face_landmarks = process_target_face_mesh(face_mesh, webcam_img)
     out_image = webcam_img.copy()
+    # domyślna opcja gdy nie naniesiono twarzy
     clone = target_input_image
 
     if multi_face_landmarks is not None:
+        # dla każdej z twarzy w kamerze
         for index, face_landmarks in enumerate(multi_face_landmarks):
             mp_drawing.draw_landmarks(
                 image=out_image,
@@ -34,9 +38,11 @@ def show_frames():
                 connections=mp_face_mesh.FACEMESH_TESSELATION,
                 landmark_drawing_spec=drawing_spec,
                 connection_drawing_spec=drawing_spec)
+            # rozpoznanie emocji
             emotion = classify(face_landmarks.landmark)
             print(index, emotion)
 
+            # sprawdzenie czy cała twarz jest widoczna, czy mamy wszystkie punkty
             if len(landmark_target_ocvs[index]) > 0:
                 for i, elem in enumerate(landmark_target_ocvs[index]):
                     if elem is None:
@@ -45,11 +51,13 @@ def show_frames():
                     if len(elem) != 2:
                         print(i)
 
+                # naniesienie twarzy
                 if emotion != 'unknown':
                     landmark_base_ocv, base_input_image = configs[index + 1][emotion]
                     seam_clone, seamless_clone = swap_faces(landmark_base_ocv, landmark_target_ocvs[index],
                                                             base_input_image, clone)
 
+                    # wybór opcji jeśli naniesiono twarze
                     if configs['mode'] == 'seamless':
                         clone = seamless_clone
                     elif configs['mode'] == 'seam':
@@ -62,6 +70,7 @@ def show_frames():
     imgtk = ImageTk.PhotoImage(image=img)
     label.imgtk = imgtk
     label.configure(image=imgtk)
+    # wywołanie głównej pętli
     label.after(20, show_frames)
 
 
@@ -85,6 +94,7 @@ Button7.place(x=600, y=650)
 Button8 = tk.Button(win, text="WOMAN", command=user3_woman, height=2, width=20, bg='white')
 Button8.place(x=600, y=720)
 
+# główna pętla programu
 show_frames()
 win.mainloop()
 face_mesh.close()

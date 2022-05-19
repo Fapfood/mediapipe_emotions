@@ -19,6 +19,7 @@ EMOTIONS = {
 }
 
 
+# funkcja pozwalająca tworzyć config tylko raz, przez co program działa szybciej
 def create_config(face_mesh, drawing_spec, name):
     result = {}
     for emotion, number in EMOTIONS.items():
@@ -30,12 +31,14 @@ def create_config(face_mesh, drawing_spec, name):
     return result
 
 
+# pobieranie odpowiednich zdjęć wzmocnień
 def load_base_img(face_mesh, image_file_name):
     image = cv2.imread(image_file_name)
     landmarks = face_mesh.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     return {'img': image, 'landmarks': landmarks}
 
 
+# pobieranie przestrzeni 2D z punktów w 3D potrzebne do nanoszenia twarzy
 def transform_landmarks_from_tf_to_ocv(keypoints, face_width, face_height):
     multi_landmark_list = []
     if keypoints.multi_face_landmarks is not None:
@@ -48,6 +51,7 @@ def transform_landmarks_from_tf_to_ocv(keypoints, face_width, face_height):
     return multi_landmark_list
 
 
+# funkcja potwierdzająca że nasza przestrzeń 2D wygląda tak samo jak oryginalne 3D
 def draw_triangulated_mesh(ocv_keypoints, img):
     for i in range(len(tmp.TRIANGULATION) // 3):
         result1 = ocv_keypoints[tmp.TRIANGULATION[i * 3]]
@@ -59,6 +63,7 @@ def draw_triangulated_mesh(ocv_keypoints, img):
     return img
 
 
+# tworzenie siatek 2D bazowych twarzy
 def process_base_face_mesh(drawing_spec,
                            face_mesh,
                            image_file,
@@ -80,6 +85,7 @@ def process_base_face_mesh(drawing_spec,
     return landmark_base_ocv, base_input_image
 
 
+# tworzenie siatek 2D każdej klatki wideo
 def process_target_face_mesh(face_mesh,
                              webcam_img):
     image_rows, image_cols, _ = webcam_img.shape
@@ -91,6 +97,7 @@ def process_target_face_mesh(face_mesh,
     return landmark_target_ocv, target_input_image, results.multi_face_landmarks
 
 
+# nanoszenie twarzy bazowej na wideo
 def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_input_image):
     seam_clone = target_input_image.copy()
     img2_gray = cv2.cvtColor(target_input_image, cv2.COLOR_BGR2GRAY)
@@ -166,6 +173,7 @@ def swap_faces(landmark_base_ocv, landmark_target_ocv, base_input_image, target_
     return result, seamless_clone
 
 
+# funkcja bez GUI, ale za to z podmianą tła
 def main():
     seamless = True  # True
 
